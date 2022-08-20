@@ -155,4 +155,13 @@
     }
 ```
 
-# Примеры
+# См. также
+
+[accessors](https://metacpan.org/pod/accessors)
+
+[accessors::classic](https://metacpan.org/pod/accessors::classic)
+
+[Class::Accessor](https://metacpan.org/pod/Class::Accessor)
+
+[Class::Accessor::Grouped](https://metacpan.org/pod/Class::Accessor::Grouped)
+
