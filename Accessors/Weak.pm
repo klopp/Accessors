@@ -331,6 +331,20 @@ None reported.
 
 No bugs have been reported.
 
+=head1 SEE ALSO
+
+=over
+
+=item L<accessors>
+
+=item L<accessors::classic>
+
+=item L<Class::Accessor>
+
+=item L<Class::Accessor::Grouped>
+
+=over
+
 =head1 LICENSE AND COPYRIGHT
 
 Copyright (C) 2022 Vsevolod Lutovinov.
