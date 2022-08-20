@@ -14,7 +14,7 @@ const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN E
 
 use vars qw/$PROP_METHOD $PRIVATE_DATA %OPT/;
 $PROP_METHOD  = 'property';
-$PRIVATE_DATA = 'PRIVATE_DATA';
+$PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
 
