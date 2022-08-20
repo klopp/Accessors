@@ -25,18 +25,18 @@ sub _set_internal_data
 
     Accessors::Base::_set_internal_data( $self, $opt );
 
-    if ( $OPT{lock} ) {
-        dlock $self->{$_} for @FIELDS;
+    if ( $self->{$PRIVATE_DATA}->{OPT}->{lock} ) {
+        dlock $self->{$_} for @{ $self->{$PRIVATE_DATA}->{FIELDS} };
     }
-    return \@FIELDS;
+    return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
 }
 
 #------------------------------------------------------------------------------
 sub create_accessors
 {
-    my ( $self, $opt ) = @_;
+    my ( $self, $params ) = @_;
     my $package = ref $self;
-    my $fields  = _set_internal_data( $self, $opt );
+    my ( $opt, $fields ) = _set_internal_data( $self, $params );
 
     for my $field ( @{$fields} ) {
         if ( !$self->can($field) ) {
@@ -45,18 +45,18 @@ sub create_accessors
                 my $self = shift;
                 if (@_) {
                     my $value = shift;
-                    if ( $OPT{validate}->{$field} ) {
-                        return unless $OPT{validate}->{$field}->($value);
+                    if ( $opt->{validate}->{$field} ) {
+                        return unless $opt->{validate}->{$field}->($value);
                     }
-                    dunlock $self->{$field} if $OPT{lock};
+                    dunlock $self->{$field} if $opt->{lock};
                     $self->{$field} = $value;
-                    dlock $self->{$field} if $OPT{lock};
+                    dlock $self->{$field} if $opt->{lock};
                 }
                 return $self->{$field};
             }
         }
         else {
-            _emethod("$package\::$field");
+            _emethod( $self, "$package\::$field" );
         }
     }
     return $self;
@@ -65,10 +65,10 @@ sub create_accessors
 #------------------------------------------------------------------------------
 sub create_property
 {
-    my ( $self, $opt ) = @_;
-    my $package  = ref $self;
-    my $fields   = _set_internal_data( $self, $opt );
-    my $property = $OPT{property} || $PROP_METHOD;
+    my ( $self, $params ) = @_;
+    my $package = ref $self;
+    my ( $opt, $fields ) = _set_internal_data( $self, $params );
+    my $property = $opt->{property} || $PROP_METHOD;
 
     if ( !$self->can($property) ) {
         no strict 'refs';
@@ -77,22 +77,22 @@ sub create_property
             if ( any { $field eq $_ } @{$fields} ) {
                 if (@_) {
                     my $value = shift;
-                    if ( $OPT{validate}->{$field} ) {
-                        return unless $OPT{validate}->{$field}->($value);
+                    if ( $opt->{validate}->{$field} ) {
+                        return unless $opt->{validate}->{$field}->($value);
                     }
-                    dunlock $self->{$field} if $OPT{lock};
+                    dunlock $self->{$field} if $opt->{lock};
                     $self->{$field} = $value;
-                    dlock $self->{$field} if $OPT{lock};
+                    dlock $self->{$field} if $opt->{lock};
                 }
                 return $self->{$field};
             }
             else {
-                return _eaccess($field);
+                return _eaccess( $self, $field );
             }
         }
     }
     else {
-        _emethod($property);
+        _emethod( $self, $property );
     }
     return $self;
 }
@@ -100,9 +100,9 @@ sub create_property
 #------------------------------------------------------------------------------
 sub create_get_set
 {
-    my ( $self, $opt ) = @_;
+    my ( $self, $params ) = @_;
     my $package = ref $self;
-    my $fields  = _set_internal_data( $self, $opt );
+    my ( $opt, $fields ) = _set_internal_data( $self, $params );
 
     for my $field ( @{$fields} ) {
         if ( !$self->can( 'get_' . $field ) ) {
@@ -113,23 +113,23 @@ sub create_get_set
             }
         }
         else {
-            _emethod("$package\::get_$field");
+            _emethod( $self, "$package\::get_$field" );
         }
         if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
             *{"$package\::set_$field"} = sub {
                 my ( $self, $value ) = @_;
-                if ( $OPT{validate}->{$field} ) {
-                    return unless $OPT{validate}->{$field}->($value);
+                if ( $opt->{validate}->{$field} ) {
+                    return unless $opt->{validate}->{$field}->($value);
                 }
-                dunlock $self->{$field} if $OPT{lock};
+                dunlock $self->{$field} if $opt->{lock};
                 $self->{$field} = $value;
-                dlock $self->{$field} if $OPT{lock};
+                dlock $self->{$field} if $opt->{lock};
                 return $self->{$field};
             }
         }
         else {
-            _emethod("$package\::set_$field");
+            _emethod( $self, "$package\::set_$field" );
         }
     }
     return $self;

@@ -3,7 +3,7 @@ package Accessors::Strict;
 use strict;
 use warnings;
 
-use vars qw/$VERSION $CLASS_SUFFIX $PRIVATE_KEYS/;
+use vars qw/$VERSION $CLASS_SUFFIX/;
 $VERSION      = '2.001';
 $CLASS_SUFFIX = 'DEADBEEF';
 
@@ -11,6 +11,7 @@ use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
+use DDP;
 
 #------------------------------------------------------------------------------
 sub import
@@ -21,14 +22,13 @@ sub import
 #------------------------------------------------------------------------------
 sub _set_internal_data
 {
-    my ( $self, $opt ) = @_;
+    my ( $self, $params ) = @_;
 
-    Accessors::Base::_set_internal_data( $self, $opt );
+    Accessors::Base::_set_internal_data( $self, $params );
 
     my $package = ref $self;
-    $PRIVATE_KEYS                = $package . '_KEYS';
-    $self->{$PRIVATE_KEYS}       = {} unless $self->{$PRIVATE_KEYS};
-    $self->{$PRIVATE_KEYS}->{$_} = $self->{$_} for @FIELDS;
+    $self->{$PRIVATE_DATA}->{KEYS} = {} unless $self->{$PRIVATE_DATA}->{KEYS};
+    $self->{$PRIVATE_DATA}->{KEYS}->{$_} = $self->{$_} for @{ $self->{$PRIVATE_DATA}->{FIELDS} };
 
     my $newclass = $package . '::' . $CLASS_SUFFIX++;
     no strict 'refs';
@@ -43,18 +43,19 @@ sub _create_access
 
     my $access = sub {
         my $field = shift;
-        if ( any { $field eq $_ } @FIELDS ) {
+
+        if ( any { $field eq $_ } @{ $self->{$PRIVATE_DATA}->{FIELDS} } ) {
             if (@_) {
                 my $value = shift;
-                if ( $OPT{validate}->{$field} ) {
-                    return unless $OPT{validate}->{$field}->($value);
+                if ( $self->{$PRIVATE_DATA}->{OPT}->{validate}->{$field} ) {
+                    return unless $self->{$PRIVATE_DATA}->{OPT}->{validate}->{$field}->($value);
                 }
-                $self->{$PRIVATE_KEYS}->{$field} = $value;
+                $self->{$PRIVATE_DATA}->{KEYS}->{$field} = $value;
             }
-            return $self->{$PRIVATE_KEYS}->{$field};
+            return $self->{$PRIVATE_DATA}->{KEYS}->{$field};
         }
         else {
-            return _eaccess($field);
+            return _eaccess( $self, $field );
         }
     };
     return $access;
@@ -63,11 +64,11 @@ sub _create_access
 #------------------------------------------------------------------------------
 sub create_accessors
 {
-    my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( $self, $opt );
+    my ( $self, $params ) = @_;
+    my $newclass = _set_internal_data( $self, $params );
     my $access   = _create_access($self);
 
-    for my $field (@FIELDS) {
+    for my $field ( @{ $self->{$PRIVATE_DATA}->{FIELDS} } ) {
         if ( !$self->can($field) ) {
             no strict 'refs';
             *{"$newclass\::$field"} = sub {
@@ -76,19 +77,18 @@ sub create_accessors
             }
         }
         else {
-            _emethod( ( ref $self ) . '::' . $field );
+            _emethod( $self, ( ref $self ) . '::' . $field );
         }
     }
-    $self = bless $access, $newclass;
-    return $self;
+    return bless $access, $newclass;
 }
 
 #------------------------------------------------------------------------------
 sub create_property
 {
-    my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( $self, $opt );
-    my $property = $OPT{property} || $PROP_METHOD;
+    my ( $self, $params ) = @_;
+    my $newclass = _set_internal_data( $self, $params );
+    my $property = $self->{$PRIVATE_DATA}->{OPT}->{property} || $PROP_METHOD;
     my $access   = _create_access($self);
 
     if ( !$self->can($property) ) {
@@ -99,20 +99,19 @@ sub create_property
         }
     }
     else {
-        _emethod($property);
+        _emethod( $self, $property );
     }
-    $self = bless $access, $newclass;
-    return $self;
+    return bless $access, $newclass;
 }
 
 #------------------------------------------------------------------------------
 sub create_get_set
 {
-    my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( $self, $opt );
+    my ( $self, $params ) = @_;
+    my $newclass = _set_internal_data( $self, $params );
     my $access   = _create_access($self);
 
-    for my $field (@FIELDS) {
+    for my $field ( @{ $self->{$PRIVATE_DATA}->{FIELDS} } ) {
         if ( !$self->can( 'get_' . $field ) ) {
             no strict 'refs';
             *{"$newclass\::get_$field"} = sub {
@@ -121,7 +120,7 @@ sub create_get_set
             }
         }
         else {
-            _emethod( ( ref $self ) . '::get_' . $field );
+            _emethod( $self, ( ref $self ) . '::get_' . $field );
         }
         if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
@@ -131,11 +130,10 @@ sub create_get_set
             }
         }
         else {
-            _emethod( ( ref $self ) . '::set_' . $field );
+            _emethod( $self, ( ref $self ) . '::set_' . $field );
         }
     }
-    $self = bless $access, $newclass;
-    return $self;
+    return bless $access, $newclass;
 }
 
 #------------------------------------------------------------------------------
