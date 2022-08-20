@@ -18,7 +18,6 @@ $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
-
 our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA access_error method_error set_internal_data/;
 
 #------------------------------------------------------------------------------
@@ -70,15 +69,16 @@ sub set_internal_data
 {
     my ( $self, $params ) = @_;
 
-    confess sprintf( '%s can deal with blessed references only', __PACKAGE__ )
+    my $caller_pkg = ( caller(1) )[0];
+    confess sprintf( '%s can deal with blessed references only', $caller_pkg )
         unless blessed $self;
     confess
-        sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before.\n",
-        $PRIVATE_DATA, __PACKAGE__, __PACKAGE__, $PRIVATE_DATA )
+        sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before\n",
+        $PRIVATE_DATA, $caller_pkg, $caller_pkg, $PRIVATE_DATA )
         if exists $self->{$PRIVATE_DATA};
 
     if ($params) {
-        confess sprintf( '%s can receive option as hash reference only', __PACKAGE__ )
+        confess sprintf( '%s can receive option as hash reference only', $caller_pkg )
             if ref $params ne 'HASH';
         %OPT = ( %OPT, %{$params} );
     }
@@ -90,10 +90,6 @@ sub set_internal_data
     @fields = array_minus( @fields, @PKG_METHODS );
     $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
     %{ $self->{$PRIVATE_DATA}->{OPT} } = %OPT;
-
-    use DDP;
-    p %OPT;
-
     return $self;
 }
 
