@@ -236,10 +236,10 @@ When an accessor is created, if a method with the same name is found in a packag
 C<Accessors::Weak> only. Protects fields for which accessors are created from direct modification:
 
 ```perl
-    $object->set_author('Arthur Charles Clarke'); # OK
-    say $object->get_author;                      # OK
-    say $object->{author};                        # OK
-    $object->{author} = 'Arthur Charles Clarke';  # ERROR, "Modification of a read-only value attempted at..."
+    $object->set_foo('bar'); # OK
+    say $object->get_foo;    # OK
+    say $object->{foo};      # OK
+    $object->{foo} = 'bar';  # ERROR, "Modification of a read-only value attempted at..."
 ```
 
 =back
