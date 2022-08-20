@@ -10,6 +10,7 @@ use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
+use Data::Lock qw/dlock dunlock/;
 
 #------------------------------------------------------------------------------
 sub import
@@ -18,13 +19,26 @@ sub import
 }
 
 #------------------------------------------------------------------------------
+sub _set_internal_data
+{
+    my ( $self, $opt ) = @_;
+
+    Accessors::Base::_set_internal_data( $self, $opt );
+
+    if ( $OPT{lock} ) {
+        dlock $self->{$_} for @FIELDS;
+    }
+    return \@FIELDS;
+}
+
+#------------------------------------------------------------------------------
 sub create_accessors
 {
     my ( $self, $opt ) = @_;
     my $package = ref $self;
-    Accessors::Base::_set_internal_data( $self, $opt );
+    my $fields  = _set_internal_data( $self, $opt );
 
-    for my $field (@FIELDS) {
+    for my $field ( @{$fields} ) {
         if ( !$self->can($field) ) {
             no strict 'refs';
             *{"$package\::$field"} = sub {
@@ -34,7 +48,9 @@ sub create_accessors
                     if ( $OPT{validate}->{$field} ) {
                         return unless $OPT{validate}->{$field}->($value);
                     }
+                    dunlock $self->{$field} if $OPT{lock};
                     $self->{$field} = $value;
+                    dlock $self->{$field} if $OPT{lock};
                 }
                 return $self->{$field};
             }
@@ -50,21 +66,23 @@ sub create_accessors
 sub create_property
 {
     my ( $self, $opt ) = @_;
-    my $package = ref $self;
-    Accessors::Base::_set_internal_data( $self, $opt );
+    my $package  = ref $self;
+    my $fields   = _set_internal_data( $self, $opt );
     my $property = $OPT{property} || $PROP_METHOD;
 
     if ( !$self->can($property) ) {
         no strict 'refs';
         *{"$package\::$property"} = sub {
             my ( $self, $field ) = ( shift, shift );
-            if ( any { $field eq $_ } @FIELDS ) {
+            if ( any { $field eq $_ } @{$fields} ) {
                 if (@_) {
                     my $value = shift;
                     if ( $OPT{validate}->{$field} ) {
                         return unless $OPT{validate}->{$field}->($value);
                     }
+                    dunlock $self->{$field} if $OPT{lock};
                     $self->{$field} = $value;
+                    dlock $self->{$field} if $OPT{lock};
                 }
                 return $self->{$field};
             }
@@ -84,9 +102,9 @@ sub create_get_set
 {
     my ( $self, $opt ) = @_;
     my $package = ref $self;
-    Accessors::Base::_set_internal_data( $self, $opt );
+    my $fields  = _set_internal_data( $self, $opt );
 
-    for my $field (@FIELDS) {
+    for my $field ( @{$fields} ) {
         if ( !$self->can( 'get_' . $field ) ) {
             no strict 'refs';
             *{"$package\::get_$field"} = sub {
@@ -104,7 +122,9 @@ sub create_get_set
                 if ( $OPT{validate}->{$field} ) {
                     return unless $OPT{validate}->{$field}->($value);
                 }
+                dunlock $self->{$field} if $OPT{lock};
                 $self->{$field} = $value;
+                dlock $self->{$field} if $OPT{lock};
                 return $self->{$field};
             }
         }
@@ -211,6 +231,17 @@ How to handle an access violation (see the C<include> and C<exclude> lists). Can
 
 When an accessor is created, if a method with the same name is found in a package or object, this handler will be called. Values are similar to the C<access> parameter.
 
+=item lock => BOOL
+
+C<Accessors::Weak> only. Protects fields for which accessors are created from direct modification:
+
+```perl
+    $object->set_author('Arthur Charles Clarke'); # OK
+    say $object->get_author;                      # OK
+    say $object->{author};                        # OK
+    $object->{author} = 'Arthur Charles Clarke';  # ERROR, "Modification of a read-only value attempted at..."
+```
+
 =back
 
 =head2 Setting custom properties on module load.
@@ -273,6 +304,8 @@ Creates a couple of methods for getting and setting field values:
 =item L<Array::Utils>
 
 =item L<Carp>
+
+=item L<Data::Lock>
 
 =item L<Const::Fast>
  

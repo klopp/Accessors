@@ -50,7 +50,7 @@
     $object = create_accessors( $object );
     say ref $object;     # => "MyClass::DEAFBEEF"
     say MyClass->data;   # => OK, выведет значение MyClass->{data}
-    say MyClass->{data}; # => ОШИБКА, выведет "Not a HASH reference at ..."
+    say MyClass->{data}; # => ОШИБКА, "Not a HASH reference at ..."
 ```
 
 # Параметры
@@ -100,6 +100,17 @@
 ## method => class
 
 Если при создании аксессора метод с таким же именем будет обнаружен в пакете или объекте, будет вызван этот обработчик. Значения аналогичны параметру `access`.
+
+## lock => BOOL
+
+Только для `Accessors::Weak`. Защищает поля, для которых созданы аксессоры, от прямой модификации:
+
+```perl
+    $object->set_author('Arthur Charles Clarke'); # OK
+    say $object->get_author;                      # OK
+    say $object->{author};                        # OK
+    $object->{author} = 'Arthur Charles Clarke';  # ОШИБКА, "Modification of a read-only value attempted at..."
+```
 
 ### Импорт
 
