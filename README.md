@@ -106,10 +106,10 @@
 Только для `Accessors::Weak`. Защищает поля, для которых созданы аксессоры, от прямой модификации:
 
 ```perl
-    $object->set_author('Arthur Charles Clarke'); # OK
-    say $object->get_author;                      # OK
-    say $object->{author};                        # OK
-    $object->{author} = 'Arthur Charles Clarke';  # ОШИБКА, "Modification of a read-only value attempted at..."
+    $object->set_author('Ann Leckiee'); # OK
+    say $object->get_author;            # OK
+    say $object->{author};              # OK
+    $object->{author} = 'Ann Leckie' ;  # ОШИБКА, "Modification of a read-only value attempted at..."
 ```
 
 ### Импорт
