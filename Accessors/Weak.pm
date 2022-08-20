@@ -1,4 +1,4 @@
-package Accessors::Universal;
+package Accessors::Weak;
 
 use strict;
 use warnings;
