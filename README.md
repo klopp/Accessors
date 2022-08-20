@@ -28,11 +28,11 @@
 ```perl
     use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    $object = create_accessors( $object );
+    create_accessors( $object );
     # или
-    # $object = create_property( $object );
+    # create_property( $object );
     # или
-    # $object = create_get_set( $object );
+    # create_get_set( $object );
 ```
 Теперь *$object* будет содержать аксессоры.
 
@@ -45,12 +45,20 @@
 Созданные аксессоры запрещают прямой доступ к полям объекта. При этом сам объект меняет `@ISA`:
 
 ```perl
-    my $object = MyClass->new;
-    say ref $object;     # => "MyClass"
-    $object = create_accessors( $object );
-    say ref $object;     # => "MyClass::DEAFBEEF"
-    say MyClass->data;   # => OK, выведет значение MyClass->{data}
-    say MyClass->{data}; # => ОШИБКА, "Not a HASH reference at ..."
+    my $o1 = MyClass->new;
+    say ref $o1;     # => "MyClass"
+    create_accessors($o1);
+    say ref $o1;     # => "MyClass::DEAFBEEF"
+    say $o1->data;   # => OK, выведет значение $o1->{data}
+    say $o1->{data}; # => ОШИБКА, "Not a HASH reference at ..."
+    my $o2 = MyClass->new;
+    say ref $o2;     # => "MyClass"
+    create_accessors($o2);
+    say ref $o2;     # => "MyClass::DEAFBEEG"
+    my $o3 = MyClass->new;
+    say ref $o3;     # => "MyClass"
+    create_accessors($o3);
+    say ref $o3;     # => "MyClass::DEAFBEEH"
 ```
 
 # Параметры

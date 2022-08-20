@@ -13,7 +13,7 @@ const my $METHOD_EXISTS => 'Method "%s" already exists';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
 
 use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
-$VERSION = '2.008';
+$VERSION      = '2.008';
 $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
@@ -44,15 +44,14 @@ sub method_error
 }
 
 #------------------------------------------------------------------------------
-sub _import
+sub import
 {
     my $self = shift;
-
-    my (@exports);
 
     # temporary storage:
     %OPT = ();
 
+    my (@exports);
     for (@_) {
         if ( ref $_ eq 'HASH' ) {
             %OPT = ( %OPT, %{$_} );
@@ -73,7 +72,6 @@ sub set_internal_data
 
     confess sprintf( '%s can deal with blessed references only', __PACKAGE__ )
         unless blessed $self;
-
     confess
         sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before.\n",
         $PRIVATE_DATA, __PACKAGE__, __PACKAGE__, $PRIVATE_DATA )
@@ -84,6 +82,7 @@ sub set_internal_data
             if ref $params ne 'HASH';
         %OPT = ( %OPT, %{$params} );
     }
+
     my @fields = keys %{$self};
     @fields = intersect( @fields, @{ $OPT{include} } ) if $OPT{include};
     @fields = array_minus( @fields, @{ $OPT{exclude} } )
@@ -91,6 +90,10 @@ sub set_internal_data
     @fields = array_minus( @fields, @PKG_METHODS );
     $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
     %{ $self->{$PRIVATE_DATA}->{OPT} } = %OPT;
+
+    use DDP;
+    p %OPT;
+
     return $self;
 }
 

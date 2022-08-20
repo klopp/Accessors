@@ -15,7 +15,7 @@ use Data::Lock qw/dlock dunlock/;
 #------------------------------------------------------------------------------
 sub import
 {
-    goto &Accessors::Base::_import;
+    goto &Accessors::Base::import;
 }
 
 #------------------------------------------------------------------------------
@@ -25,8 +25,8 @@ sub _set_internal_data
 
     set_internal_data( $self, $opt );
 
-    my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock}; 
-    if ( $lock ) {
+    my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock};
+    if ($lock) {
         dlock $self->{$_} for $lock eq 'all' ? keys %{$self} : @{ $self->{$PRIVATE_DATA}->{FIELDS} };
     }
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
@@ -173,11 +173,11 @@ Accessors::Weak
 
     use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    $object = create_accessors($object);
+    create_accessors($object);
     # OR
-    # $object = create_property($object);
+    # create_property($object);
     # OR
-    # $object = create_get_set($object);
+    # create_get_set($object);
 
 =back
 
