@@ -6,7 +6,7 @@
 
 ``` perl
     package MyClass;
-    use base q/Accessors::Universal/;
+    use base q/Accessors::Weak/;
     sub new
     {
         my ($class) = @_;
@@ -26,15 +26,32 @@
 Теперь все объекты *MyClass* будут содержать аксессоры.
 
 ```perl
-    use Accessors::Universal qw/create_accessors create_property create_get_set/;
+    use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    create_accessors($object);
+    $object->create_accessors( $object );
     # или
-    # create_property($object);
+    # $object = create_property( $object );
     # или
-    # create_get_set($object);
+    # $object = create_get_set( $object );
 ```
 Теперь *$object* будет содержать аксессоры.
+
+## Accessors::Weak
+
+Созданные аксессоры не исключают прямого доступа к полям объекта.
+
+## Accessors::Strict
+
+Созданные аксессоры запрещают прямой доступ к полям объекта. При этом сам объект меняет `@ISA`:
+
+```perl
+    my $object = MyClass->new;
+    say ref $object;     # => "MyClass"
+    $object = create_accessors( $object );
+    say ref $object;     # => "MyClass::DEAFBEEF"
+    say MyClass->data;   # => OK, shows MyClass->{data}
+    say MyClass->{data}; # => Not a HASH reference at ...
+```
 
 # Параметры
 
@@ -50,7 +67,7 @@
     
 ## exclude => [ name1, name2, ... ]
 
-Список имён полей для которых не нужно создавать аксессоры. Этот параметр обрабатывается после *include*.
+Список имён полей для которых не нужно создавать аксессоры. Этот параметр обрабатывается после `include`.
 
 ## property => name
 
@@ -89,9 +106,9 @@
 Все параметры могут указываться глобально, при импорте. Например:
 
 ```perl
-    use Accessors::Universal { access => 'carp', property => 'prop' };
+    use Accessors::Weak { access => 'carp', property => 'prop' };
     # [...]
-    use Accessors::Universal qw/create_accessors/, { access => 'carp', property => 'prop' };
+    use Accessors::Strict qw/create_accessors/, { access => 'carp', property => 'prop' };
 ```
 
 # Методы
