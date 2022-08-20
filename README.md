@@ -28,7 +28,7 @@
 ```perl
     use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    $object->create_accessors( $object );
+    $object = create_accessors( $object );
     # или
     # $object = create_property( $object );
     # или
