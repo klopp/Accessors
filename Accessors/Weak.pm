@@ -121,9 +121,12 @@ sub create_property
         *{"$package\::$property"} = sub {
             my ( $self, $field ) = ( shift, shift );
             if ( any { $field eq $_ } @FIELDS ) {
-                my $value = shift;
-                if ( $OPT{validate}->{$field} ) {
-                    return unless $OPT{validate}->{$field}->($value);
+                if (@_) {
+                    my $value = shift;
+                    if ( $OPT{validate}->{$field} ) {
+                        return unless $OPT{validate}->{$field}->($value);
+                    }
+                    $self->{$field} = $value;
                 }
                 return $self->{$field};
             }
