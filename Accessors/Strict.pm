@@ -11,7 +11,6 @@ use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
-use DDP;
 
 #------------------------------------------------------------------------------
 sub import

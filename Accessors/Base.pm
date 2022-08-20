@@ -20,9 +20,6 @@ use base qw/Exporter/;
 
 our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA _eaccess _emethod/;
 
-use Modern::Perl;
-use DDP;
-
 #------------------------------------------------------------------------------
 sub _eaccess
 {
