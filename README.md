@@ -166,6 +166,20 @@
     }
 ```
 
+# Зависимости
+
+[Array::Utils](https://metacpan.org/pod/Array::Utils)
+
+[Carp](Carp)
+
+[Data::Lock](https://metacpan.org/pod/Data::Lock)
+
+[Const::Fast](https://metacpan.org/pod/Const::Fast)
+ 
+[List::MoreUtils](https://metacpan.org/pod/List::MoreUtils)
+
+[Scalar::Util](https://metacpan.org/pod/Scalar::Util)
+
 # См. также
 
 [accessors](https://metacpan.org/pod/accessors)
