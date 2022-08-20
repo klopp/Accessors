@@ -2,81 +2,19 @@ package Accessors::Weak;
 
 use strict;
 use warnings;
-use Carp qw/cluck confess carp croak/;
-use Const::Fast;
 
-const my $ACCESS_DENIED => 'Access denied to field "%s"';
-const my $METHOD_EXISTS => 'Method "%s" already exists';
-const my $PROP_METHOD   => 'property';
-
-use vars qw/%OPT @FIELDS $VERSION/;
+use vars qw/$VERSION/;
 $VERSION = '2.001';
 
-use Array::Utils qw/intersect array_minus/;
 use List::MoreUtils qw/any/;
-use Scalar::Util qw/blessed/;
-
-use base qw/Exporter/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
+
+use Accessors::Base;
 
 #------------------------------------------------------------------------------
 sub import
 {
-    my $self = shift;
-
-    my (@exports);
-    for (@_) {
-        if ( ref $_ eq 'HASH' ) {
-            %OPT = ( %OPT, %{$_} );
-        }
-        else {
-            push @exports, $_;
-        }
-    }
-
-    @_ = ( $self, @exports );
-    goto &Exporter::import;
-}
-
-#------------------------------------------------------------------------------
-sub _set_internal_data
-{
-    my ( $self, $opt ) = @_;
-
-    confess sprintf( '%s can deal with blessed references only', __PACKAGE__ )
-        unless blessed $self;
-
-    if ($opt) {
-        confess sprintf( '%s can receive option as hash reference only', __PACKAGE__ )
-            if ref $opt ne 'HASH';
-        %OPT = %{$opt};
-    }
-    @FIELDS = keys %{$self};
-    @FIELDS = intersect( @FIELDS, @{ $OPT{include} } ) if $OPT{include};
-    @FIELDS = array_minus( @FIELDS, @{ $OPT{exclude} } ) if $OPT{exclude};
-    return \@FIELDS;
-}
-
-#------------------------------------------------------------------------------
-sub _eaccess
-{
-    my ($field) = @_;
-    if ( $OPT{access} && Carp->can( $OPT{access} ) ) {
-        no strict 'refs';
-        $OPT{access}->( sprintf $ACCESS_DENIED, $field );
-    }
-    return;
-}
-
-#------------------------------------------------------------------------------
-sub _emethod
-{
-    my ($method) = @_;
-    if ( $OPT{method} && Carp->can( $OPT{method} ) ) {
-        no strict 'refs';
-        $OPT{method}->( sprintf $METHOD_EXISTS, $method );
-    }
-    return;
+    goto &Accessors::Base::_import;
 }
 
 #------------------------------------------------------------------------------
@@ -84,25 +22,25 @@ sub create_accessors
 {
     my ( $self, $opt ) = @_;
     my $package = ref $self;
-    my $fields  = _set_internal_data( $self, $opt );
+    Accessors::Base::_set_internal_data( $self, $opt );
 
-    for my $key ( @{$fields} ) {
-        if ( !$self->can($key) ) {
+    for my $field (@FIELDS) {
+        if ( !$self->can($field) ) {
             no strict 'refs';
-            *{"$package\::$key"} = sub {
+            *{"$package\::$field"} = sub {
                 my $self = shift;
                 if (@_) {
                     my $value = shift;
-                    if ( $OPT{validate}->{$key} ) {
-                        return unless $OPT{validate}->{$key}->($value);
+                    if ( $OPT{validate}->{$field} ) {
+                        return unless $OPT{validate}->{$field}->($value);
                     }
-                    $self->{$key} = $value;
+                    $self->{$field} = $value;
                 }
-                return $self->{$key};
+                return $self->{$field};
             }
         }
         else {
-            _emethod("$package\::$key");
+            _emethod("$package\::$field");
         }
     }
     return $self;
@@ -112,8 +50,8 @@ sub create_accessors
 sub create_property
 {
     my ( $self, $opt ) = @_;
-    my $package  = ref $self;
-    my $fields   = _set_internal_data( $self, $opt );
+    my $package = ref $self;
+    Accessors::Base::_set_internal_data( $self, $opt );
     my $property = $OPT{property} || $PROP_METHOD;
 
     if ( !$self->can($property) ) {
@@ -146,32 +84,32 @@ sub create_get_set
 {
     my ( $self, $opt ) = @_;
     my $package = ref $self;
-    my $fields  = _set_internal_data( $self, $opt );
+    Accessors::Base::_set_internal_data( $self, $opt );
 
-    for my $key ( @{$fields} ) {
-        if ( !$self->can( 'get_' . $key ) ) {
+    for my $field (@FIELDS) {
+        if ( !$self->can( 'get_' . $field ) ) {
             no strict 'refs';
-            *{"$package\::get_$key"} = sub {
+            *{"$package\::get_$field"} = sub {
                 my ($self) = @_;
-                return $self->{$key};
+                return $self->{$field};
             }
         }
         else {
-            _emethod("$package\::get_$key");
+            _emethod("$package\::get_$field");
         }
-        if ( !$self->can( 'set_' . $key ) ) {
+        if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
-            *{"$package\::set_$key"} = sub {
+            *{"$package\::set_$field"} = sub {
                 my ( $self, $value ) = @_;
-                if ( $OPT{validate}->{$key} ) {
-                    return unless $OPT{validate}->{$key}->($value);
+                if ( $OPT{validate}->{$field} ) {
+                    return unless $OPT{validate}->{$field}->($value);
                 }
-                $self->{$key} = $value;
-                return $self->{$key};
+                $self->{$field} = $value;
+                return $self->{$field};
             }
         }
         else {
-            _emethod("$package\::set_$key");
+            _emethod("$package\::set_$field");
         }
     }
     return $self;
@@ -184,7 +122,7 @@ __END__
 
 =head1 NAME
 
-Accessors::Universal
+Accessors::Weak 
 
 =head1 SYNOPSIS
 
@@ -193,7 +131,7 @@ Accessors::Universal
 =item Accessors for whole package
 
     package AClass;
-    use base q/Accessors::Universal/;
+    use base q/Accessors::Weak/;
     sub new
     {
         my ($class) = @_;
@@ -212,13 +150,13 @@ Accessors::Universal
 
 =item Accessors for single object
 
-    use Accessors::Universal qw/create_accessors create_property create_get_set/;
+    use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    create_accessors($object);
+    $object = create_accessors($object);
     # OR
-    # create_property($object);
+    # $object = create_property($object);
     # OR
-    # create_get_set($object);
+    # $object = create_get_set($object);
 
 =back
 
@@ -277,11 +215,11 @@ When an accessor is created, if a method with the same name is found in a packag
 
 =head2 Setting custom properties on module load.
 
-    use Accessors::Universal qw/create_accessors/, { access => croak };
+    use Accessors::Strict qw/create_accessors/, { access => croak };
 
 =head2 Setting custom properties on the methods call.
 
-    $object->create_accessors( { exclude => [ 'index' ] } );
+    $object->create_accessors( $object, { exclude => [ 'index' ] } );
 
 =head1 SUBROUTINES/METHODS
 

@@ -81,3 +81,13 @@ sub _set_internal_data
 }
 
 #------------------------------------------------------------------------------
+1;
+
+=head1 NAME
+
+Accessors::Base
+
+=head1 DESCRIPTION
+
+Base class for Accessors::Weak and Accessors::Strict
+ 

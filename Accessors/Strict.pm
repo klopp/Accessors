@@ -2,8 +2,6 @@ package Accessors::Strict;
 
 use strict;
 use warnings;
-use Carp qw/cluck confess carp croak/;
-use Const::Fast;
 
 use vars qw/$VERSION $CLASS_SUFFIX $PRIVATE_KEYS/;
 $VERSION      = '2.001';
@@ -13,9 +11,6 @@ use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
-
-use Modern::Perl;
-use DDP;
 
 #------------------------------------------------------------------------------
 sub import
@@ -69,11 +64,11 @@ sub _create_access
 sub create_accessors
 {
     my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( ${$self}, $opt );
-    my $access   = _create_access( ${$self} );
+    my $newclass = _set_internal_data( $self, $opt );
+    my $access   = _create_access($self);
 
     for my $field (@FIELDS) {
-        if ( !${$self}->can($field) ) {
+        if ( !$self->can($field) ) {
             no strict 'refs';
             *{"$newclass\::$field"} = sub {
                 shift;
@@ -81,22 +76,22 @@ sub create_accessors
             }
         }
         else {
-            _emethod( ( ref ${$self} ) . '::' . $field );
+            _emethod( ( ref $self ) . '::' . $field );
         }
     }
-    ${$self} = bless $access, $newclass;
-    return ${$self};
+    $self = bless $access, $newclass;
+    return $self;
 }
 
 #------------------------------------------------------------------------------
 sub create_property
 {
     my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( ${$self}, $opt );
+    my $newclass = _set_internal_data( $self, $opt );
     my $property = $OPT{property} || $PROP_METHOD;
-    my $access   = _create_access( ${$self} );
+    my $access   = _create_access($self);
 
-    if ( !${$self}->can($property) ) {
+    if ( !$self->can($property) ) {
         no strict 'refs';
         *{"$newclass\::$property"} = sub {
             shift;
@@ -106,19 +101,19 @@ sub create_property
     else {
         _emethod($property);
     }
-    ${$self} = bless $access, $newclass;
-    return ${$self};
+    $self = bless $access, $newclass;
+    return $self;
 }
 
 #------------------------------------------------------------------------------
 sub create_get_set
 {
     my ( $self, $opt ) = @_;
-    my $newclass = _set_internal_data( ${$self}, $opt );
-    my $access   = _create_access( ${$self} );
+    my $newclass = _set_internal_data( $self, $opt );
+    my $access   = _create_access($self);
 
     for my $field (@FIELDS) {
-        if ( !${$self}->can( 'get_' . $field ) ) {
+        if ( !$self->can( 'get_' . $field ) ) {
             no strict 'refs';
             *{"$newclass\::get_$field"} = sub {
                 shift;
@@ -126,9 +121,9 @@ sub create_get_set
             }
         }
         else {
-            _emethod( ( ref ${$self} ) . '::get_' . $field );
+            _emethod( ( ref $self ) . '::get_' . $field );
         }
-        if ( !${$self}->can( 'set_' . $field ) ) {
+        if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
             *{"$newclass\::set_$field"} = sub {
                 shift;
@@ -136,15 +131,24 @@ sub create_get_set
             }
         }
         else {
-            _emethod( ( ref ${$self} ) . '::set_' . $field );
+            _emethod( ( ref $self ) . '::set_' . $field );
         }
     }
-    ${$self} = bless $access, $newclass;
-    return ${$self};
+    $self = bless $access, $newclass;
+    return $self;
 }
 
 #------------------------------------------------------------------------------
 1;
 
 __END__
+
+=head1 NAME
+
+Accessors::Strict
+
+=head1 DESCRIPTION
+
+See Accessors::Weak POD.
+ 
 
