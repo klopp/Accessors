@@ -10,6 +10,7 @@ use Scalar::Util qw/blessed/;
 
 const my $ACCESS_DENIED => 'Access denied to field "%s"';
 const my $METHOD_EXISTS => 'Method "%s" already exists';
+const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
 
 use vars qw/%OPT @FIELDS $PROP_METHOD/;
 
@@ -77,6 +78,7 @@ sub _set_internal_data
     @FIELDS = keys %{$self};
     @FIELDS = intersect( @FIELDS, @{ $OPT{include} } ) if $OPT{include};
     @FIELDS = array_minus( @FIELDS, @{ $OPT{exclude} } ) if $OPT{exclude};
+    @FIELDS = array_minus( @FIELDS, @PKG_METHODS );
     return $self;
 }
 
