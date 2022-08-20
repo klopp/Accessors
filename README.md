@@ -49,8 +49,8 @@
     say ref $object;     # => "MyClass"
     $object = create_accessors( $object );
     say ref $object;     # => "MyClass::DEAFBEEF"
-    say MyClass->data;   # => OK, shows MyClass->{data}
-    say MyClass->{data}; # => Not a HASH reference at ...
+    say MyClass->data;   # => OK, выведет значение MyClass->{data}
+    say MyClass->{data}; # => ОШИБКА, выведет "Not a HASH reference at ..."
 ```
 
 # Параметры
