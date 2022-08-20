@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw/$VERSION/;
-$VERSION = '2.001';
+$VERSION = '2.008';
 
 use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
@@ -23,10 +23,11 @@ sub _set_internal_data
 {
     my ( $self, $opt ) = @_;
 
-    Accessors::Base::_set_internal_data( $self, $opt );
+    set_internal_data( $self, $opt );
 
-    if ( $self->{$PRIVATE_DATA}->{OPT}->{lock} ) {
-        dlock $self->{$_} for @{ $self->{$PRIVATE_DATA}->{FIELDS} };
+    my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock}; 
+    if ( $lock ) {
+        dlock $self->{$_} for $lock eq 'all' ? keys %{$self} : @{ $self->{$PRIVATE_DATA}->{FIELDS} };
     }
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
 }
@@ -56,7 +57,7 @@ sub create_accessors
             }
         }
         else {
-            _emethod( $self, "$package\::$field" );
+            method_error( $self, "$package\::$field" );
         }
     }
     return $self;
@@ -87,12 +88,12 @@ sub create_property
                 return $self->{$field};
             }
             else {
-                return _eaccess( $self, $field );
+                return access_error( $self, $field );
             }
         }
     }
     else {
-        _emethod( $self, $property );
+        method_error( $self, $property );
     }
     return $self;
 }
@@ -113,7 +114,7 @@ sub create_get_set
             }
         }
         else {
-            _emethod( $self, "$package\::get_$field" );
+            method_error( $self, "$package\::get_$field" );
         }
         if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
@@ -129,7 +130,7 @@ sub create_get_set
             }
         }
         else {
-            _emethod( $self, "$package\::set_$field" );
+            method_error( $self, "$package\::set_$field" );
         }
     }
     return $self;
@@ -235,12 +236,12 @@ When an accessor is created, if a method with the same name is found in a packag
 
 C<Accessors::Weak> only. Protects fields for which accessors are created from direct modification:
 
-```perl
     $object->set_foo('bar'); # OK
     say $object->get_foo;    # OK
     say $object->{foo};      # OK
     $object->{foo} = 'bar';  # ERROR, "Modification of a read-only value attempted at..."
-```
+
+By default, fields are not locked. The value C<"all"> causes all fields to be locked, including fields without accessors.
 
 =back
 

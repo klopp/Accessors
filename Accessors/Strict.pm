@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw/$VERSION $CLASS_SUFFIX/;
-$VERSION      = '2.001';
+$VERSION      = '2.008';
 $CLASS_SUFFIX = 'DEADBEEF';
 
 use List::MoreUtils qw/any/;
@@ -23,13 +23,13 @@ sub _set_internal_data
 {
     my ( $self, $params ) = @_;
 
-    Accessors::Base::_set_internal_data( $self, $params );
+    set_internal_data( $self, $params );
 
     my $package = ref $self;
     $self->{$PRIVATE_DATA}->{KEYS} = {} unless $self->{$PRIVATE_DATA}->{KEYS};
     $self->{$PRIVATE_DATA}->{KEYS}->{$_} = $self->{$_} for @{ $self->{$PRIVATE_DATA}->{FIELDS} };
 
-    my $newclass = $package . '::' . $CLASS_SUFFIX++;
+    my $newclass = $package . q{::} . $CLASS_SUFFIX++;
     no strict 'refs';
     @{"$newclass\::ISA"} = ($package);
     return $newclass;
@@ -54,7 +54,7 @@ sub _create_access
             return $self->{$PRIVATE_DATA}->{KEYS}->{$field};
         }
         else {
-            return _eaccess( $self, $field );
+            return access_error( $self, $field );
         }
     };
     return $access;
@@ -76,7 +76,7 @@ sub create_accessors
             }
         }
         else {
-            _emethod( $self, ( ref $self ) . '::' . $field );
+            method_error( $self, ( ref $self ) . q{::} . $field );
         }
     }
     return bless $access, $newclass;
@@ -98,7 +98,7 @@ sub create_property
         }
     }
     else {
-        _emethod( $self, $property );
+        method_error( $self, $property );
     }
     return bless $access, $newclass;
 }
@@ -119,7 +119,7 @@ sub create_get_set
             }
         }
         else {
-            _emethod( $self, ( ref $self ) . '::get_' . $field );
+            method_error( $self, ( ref $self ) . '::get_' . $field );
         }
         if ( !$self->can( 'set_' . $field ) ) {
             no strict 'refs';
@@ -129,7 +129,7 @@ sub create_get_set
             }
         }
         else {
-            _emethod( $self, ( ref $self ) . '::set_' . $field );
+            method_error( $self, ( ref $self ) . '::set_' . $field );
         }
     }
     return bless $access, $newclass;

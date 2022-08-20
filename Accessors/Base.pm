@@ -12,16 +12,17 @@ const my $ACCESS_DENIED => 'Access denied to field "%s"';
 const my $METHOD_EXISTS => 'Method "%s" already exists';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
 
-use vars qw/$PROP_METHOD $PRIVATE_DATA %OPT/;
+use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
+$VERSION = '2.008';
 $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
 
-our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA _eaccess _emethod/;
+our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA access_error method_error set_internal_data/;
 
 #------------------------------------------------------------------------------
-sub _eaccess
+sub access_error
 {
     my ( $self, $field ) = @_;
     if ( $self->{$PRIVATE_DATA}->{OPT}->{access} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{access} ) ) {
@@ -32,7 +33,7 @@ sub _eaccess
 }
 
 #------------------------------------------------------------------------------
-sub _emethod
+sub method_error
 {
     my ( $self, $method ) = @_;
     if ( $self->{$PRIVATE_DATA}->{OPT}->{method} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{method} ) ) {
@@ -66,7 +67,7 @@ sub _import
 }
 
 #------------------------------------------------------------------------------
-sub _set_internal_data
+sub set_internal_data
 {
     my ( $self, $params ) = @_;
 
@@ -95,6 +96,8 @@ sub _set_internal_data
 
 #------------------------------------------------------------------------------
 1;
+
+__END__
 
 =head1 NAME
 
