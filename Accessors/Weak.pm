@@ -226,7 +226,17 @@ List of validators for set values. Functions must return undef if validation fai
 
 =item access => class
 
-How to handle an access violation (see the C<include> and C<exclude> lists). Can be C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (L<Carp> module methods). Any other value will skip processing (default behavior).
+How to handle an access violation (see the C<include> and C<exclude> lists). Can be:
+
+=over
+
+=item * None (no handling, default).
+
+=item * C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (use L<Carp> methods with diagnostics). 
+
+=item * Reference to the handler code, to which two arguments will be passed: a reference to the work object and the field name.
+
+=back
 
 =item method => class
 

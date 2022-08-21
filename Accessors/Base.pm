@@ -24,9 +24,14 @@ our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA access_error method_error set_intern
 sub access_error
 {
     my ( $self, $field ) = @_;
-    if ( $self->{$PRIVATE_DATA}->{OPT}->{access} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{access} ) ) {
-        no strict 'refs';
-        $self->{$PRIVATE_DATA}->{OPT}->{access}->( sprintf $ACCESS_DENIED, $field );
+    my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{access};
+    if ($eaccess) {
+        if ( ref $eaccess eq 'CODE' ) {
+            $eaccess->( $self, $field );
+        }
+        elsif ( Carp->can($eaccess) ) {
+            $eaccess->( sprintf $ACCESS_DENIED, $field );
+        }
     }
     return;
 }
@@ -35,9 +40,14 @@ sub access_error
 sub method_error
 {
     my ( $self, $method ) = @_;
-    if ( $self->{$PRIVATE_DATA}->{OPT}->{method} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{method} ) ) {
-        no strict 'refs';
-        $self->{$PRIVATE_DATA}->{OPT}->{method}->( sprintf $METHOD_EXISTS, $method );
+    my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{method};
+    if ($emethod) {
+        if ( ref $emethod eq 'CODE' ) {
+            $emethod->( $self, $method );
+        }
+        elsif ( Carp->can($emethod) ) {
+            $emethod->( sprintf $METHOD_EXISTS, $method );
+        }
     }
     return;
 }
