@@ -224,7 +224,7 @@ List of validators for set values. Functions must return undef if validation fai
     });
 
 
-=item access => class
+=item access => VALUE
 
 How to handle an access violation (see the C<include> and C<exclude> lists). Can be:
 
@@ -238,7 +238,7 @@ How to handle an access violation (see the C<include> and C<exclude> lists). Can
 
 =back
 
-=item method => class
+=item method => VALUE
 
 When an accessor is created, if a method with the same name is found in a package or object, this handler will be called. Values are similar to the C<access> parameter.
 
