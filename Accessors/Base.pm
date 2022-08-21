@@ -13,21 +13,25 @@ const my $METHOD_EXISTS => 'Method "%s" already exists';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
 
 use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
-$VERSION = '2.008';
+$VERSION      = '2.008';
 $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
-
 our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA access_error method_error set_internal_data/;
 
 #------------------------------------------------------------------------------
 sub access_error
 {
     my ( $self, $field ) = @_;
-    if ( $self->{$PRIVATE_DATA}->{OPT}->{access} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{access} ) ) {
-        no strict 'refs';
-        $self->{$PRIVATE_DATA}->{OPT}->{access}->( sprintf $ACCESS_DENIED, $field );
+    my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{access};
+    if ($eaccess) {
+        if ( ref $eaccess eq 'CODE' ) {
+            $eaccess->( $self, $field );
+        }
+        elsif ( Carp->can($eaccess) ) {
+            $eaccess->( sprintf $ACCESS_DENIED, $field );
+        }
     }
     return;
 }
@@ -36,23 +40,27 @@ sub access_error
 sub method_error
 {
     my ( $self, $method ) = @_;
-    if ( $self->{$PRIVATE_DATA}->{OPT}->{method} && Carp->can( $self->{$PRIVATE_DATA}->{OPT}->{method} ) ) {
-        no strict 'refs';
-        $self->{$PRIVATE_DATA}->{OPT}->{method}->( sprintf $METHOD_EXISTS, $method );
+    my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{method};
+    if ($emethod) {
+        if ( ref $emethod eq 'CODE' ) {
+            $emethod->( $self, $method );
+        }
+        elsif ( Carp->can($emethod) ) {
+            $emethod->( sprintf $METHOD_EXISTS, $method );
+        }
     }
     return;
 }
 
 #------------------------------------------------------------------------------
-sub _import
+sub import
 {
     my $self = shift;
-
-    my (@exports);
 
     # temporary storage:
     %OPT = ();
 
+    my (@exports);
     for (@_) {
         if ( ref $_ eq 'HASH' ) {
             %OPT = ( %OPT, %{$_} );
@@ -71,19 +79,20 @@ sub set_internal_data
 {
     my ( $self, $params ) = @_;
 
-    confess sprintf( '%s can deal with blessed references only', __PACKAGE__ )
+    my $caller_pkg = ( caller(1) )[0];
+    confess sprintf( '%s can deal with blessed references only', $caller_pkg )
         unless blessed $self;
-
     confess
-        sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before.\n",
-        $PRIVATE_DATA, __PACKAGE__, __PACKAGE__, $PRIVATE_DATA )
+        sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before\n",
+        $PRIVATE_DATA, $caller_pkg, $caller_pkg, $PRIVATE_DATA )
         if exists $self->{$PRIVATE_DATA};
 
     if ($params) {
-        confess sprintf( '%s can receive option as hash reference only', __PACKAGE__ )
+        confess sprintf( '%s can receive option as hash reference only', $caller_pkg )
             if ref $params ne 'HASH';
         %OPT = ( %OPT, %{$params} );
     }
+
     my @fields = keys %{$self};
     @fields = intersect( @fields, @{ $OPT{include} } ) if $OPT{include};
     @fields = array_minus( @fields, @{ $OPT{exclude} } )

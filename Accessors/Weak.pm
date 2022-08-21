@@ -15,7 +15,7 @@ use Data::Lock qw/dlock dunlock/;
 #------------------------------------------------------------------------------
 sub import
 {
-    goto &Accessors::Base::_import;
+    goto &Accessors::Base::import;
 }
 
 #------------------------------------------------------------------------------
@@ -25,8 +25,8 @@ sub _set_internal_data
 
     set_internal_data( $self, $opt );
 
-    my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock}; 
-    if ( $lock ) {
+    my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock};
+    if ($lock) {
         dlock $self->{$_} for $lock eq 'all' ? keys %{$self} : @{ $self->{$PRIVATE_DATA}->{FIELDS} };
     }
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
@@ -173,11 +173,11 @@ Accessors::Weak
 
     use Accessors::Strict qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
-    $object = create_accessors($object);
+    create_accessors($object);
     # OR
-    # $object = create_property($object);
+    # create_property($object);
     # OR
-    # $object = create_get_set($object);
+    # create_get_set($object);
 
 =back
 
@@ -224,11 +224,21 @@ List of validators for set values. Functions must return undef if validation fai
     });
 
 
-=item access => class
+=item access => VALUE
 
-How to handle an access violation (see the C<include> and C<exclude> lists). Can be C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (L<Carp> module methods). Any other value will skip processing (default behavior).
+How to handle an access violation (see the C<include> and C<exclude> lists). Can be:
 
-=item method => class
+=over
+
+=item * None (no handling, default).
+
+=item * C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (use L<Carp> methods with diagnostics). 
+
+=item * Reference to the handler code, to which two arguments will be passed: a reference to the work object and the field name.
+
+=back
+
+=item method => VALUE
 
 When an accessor is created, if a method with the same name is found in a package or object, this handler will be called. Values are similar to the C<access> parameter.
 

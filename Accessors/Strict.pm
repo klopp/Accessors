@@ -15,7 +15,7 @@ use Accessors::Base;
 #------------------------------------------------------------------------------
 sub import
 {
-    goto &Accessors::Base::_import;
+    goto &Accessors::Base::import;
 }
 
 #------------------------------------------------------------------------------
@@ -79,7 +79,9 @@ sub create_accessors
             method_error( $self, ( ref $self ) . q{::} . $field );
         }
     }
-    return bless $access, $newclass;
+
+    $_[0] = bless $access, $newclass;
+    return $_[0];
 }
 
 #------------------------------------------------------------------------------
@@ -100,7 +102,9 @@ sub create_property
     else {
         method_error( $self, $property );
     }
-    return bless $access, $newclass;
+
+    $_[0] = bless $access, $newclass;
+    return $_[0];
 }
 
 #------------------------------------------------------------------------------
@@ -132,7 +136,9 @@ sub create_get_set
             method_error( $self, ( ref $self ) . '::set_' . $field );
         }
     }
-    return bless $access, $newclass;
+
+    $_[0] = bless $access, $newclass;
+    return $_[0];
 }
 
 #------------------------------------------------------------------------------
