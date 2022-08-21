@@ -11,8 +11,6 @@
     {
         my ($class) = @_;
         my $self = bless {
-            array  => [1],
-            hash   => { 2 => 3 },
             scalar => 'scalar value',
         }, $class;
 
@@ -149,15 +147,25 @@
 
 ## create_accessors( [$object,] \[$options] )
 
-Создаёт методы для доступа и установки значений полей с тем же именем. Например, для поля `author` будет создан такой метод:
+Создаёт методы для доступа и установки значений полей с тем же именем. Например:
 
 ```perl
-    sub author
+    package MyBook;
+    use Accessors::Weak, { lock => 'all' };
+    use base q/Accessors::Weak/;
+    sub new
     {
-        my $self = shift;
-        $self->{author} = shift if @_;
-        return $self->{author};
+        my ($class) = @_;
+        my $self = bless {
+            author  => 'me',
+        }, $class;
+        return $self->create_accessors;
     }
+    # [...]
+    my $book = MyBook->new;
+    say $book->author;        # "me"
+    say $book->author('you'); # "you"
+    $book->{author} = 'we';   # ОШИБКА
 ```
 
 ## create_property( [$object,] \[$options] )
@@ -165,12 +173,9 @@
 Создаёт метод с именем `$options->{property}` (по умолчанию `"property"`) для доступа к полям:
 
 ```perl
-    sub property
-    {
-        my ( $self, $field ) = (shift, shift);
-        $self->{$field} = shift if @_;
-        return $self->{$field};
-    }
+    create_property($object);
+    say $object->property('scavar_value');
+    say $object->property( 'scavar_value', 'new_value' ));
 ```
 При нарушении доступа (см. параметры `include` и `exclude`) обрабатывается параметр `access`.
 
