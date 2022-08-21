@@ -11,8 +11,6 @@
     {
         my ($class) = @_;
         my $self = bless {
-            array  => [1],
-            hash   => { 2 => 3 },
             scalar => 'scalar value',
         }, $class;
 
