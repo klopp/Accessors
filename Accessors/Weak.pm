@@ -6,11 +6,11 @@ use warnings;
 use vars qw/$VERSION/;
 $VERSION = '2.008';
 
-use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
 use Data::Lock qw/dlock dunlock/;
+use List::MoreUtils qw/any/;
 
 #------------------------------------------------------------------------------
 sub import
@@ -93,7 +93,7 @@ sub create_property
         }
     }
     else {
-        method_error( $self, $property );
+        method_error( $self, "$package\::$property" );
     }
     return $self;
 }

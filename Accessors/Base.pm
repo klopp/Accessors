@@ -30,6 +30,7 @@ sub access_error
             $eaccess->( $self, $field );
         }
         elsif ( Carp->can($eaccess) ) {
+            no strict 'refs';
             $eaccess->( sprintf $ACCESS_DENIED, $field );
         }
     }
@@ -46,6 +47,7 @@ sub method_error
             $emethod->( $self, $method );
         }
         elsif ( Carp->can($emethod) ) {
+            no strict 'refs';
             $emethod->( sprintf $METHOD_EXISTS, $method );
         }
     }

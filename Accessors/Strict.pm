@@ -31,7 +31,7 @@ sub _set_internal_data
 
     my $newclass = $package . q{::} . $CLASS_SUFFIX++;
     no strict 'refs';
-    @{"$newclass\::ISA"} = ($package);
+    @{ $newclass . '::ISA' } = ($package);
     return $newclass;
 }
 
@@ -100,7 +100,7 @@ sub create_property
         }
     }
     else {
-        method_error( $self, $property );
+        method_error( $self, ( ref $self ) . q{::} . $property );
     }
 
     $_[0] = bless $access, $newclass;
