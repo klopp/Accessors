@@ -228,11 +228,13 @@ How to handle an access violation (see the C<include> and C<exclude> lists). Can
 
 =over
 
-=item * None (no handling, default).
-
 =item * C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (use L<Carp> methods with diagnostics). 
 
 =item * Reference to the handler code, to which two arguments will be passed: a reference to the work object and the field name.
+
+=item * `undef` or any other value - do nothing.
+
+Without `access` `Carp::confess` is called with the appropriate diagnostic.
 
 =back
 
