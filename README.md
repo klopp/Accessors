@@ -131,10 +131,13 @@
 ```perl
     $books->create_accessors( {
         chtype => {
-            author => sub
-            {
-                my ($self, $field, $type) = @_;
-                # ...
+            author => sub {
+                my ( $self, $field, $type ) = @_;
+                confess sprintf(
+                    'Can not change %s::%s type (%s) to "%s"',
+                    ( caller(1) )[0],
+                    $field, reftype $self->{$field}, $type
+                );
             }
         },
     });
