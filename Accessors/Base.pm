@@ -11,12 +11,13 @@ use Scalar::Util qw/blessed/;
 const my $ACCESS_DENIED => 'Access denied to field "%s"';
 const my $METHOD_EXISTS => 'Method "%s" already exists';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
+
 # default error handlers:
-const my $EMETHOD       => 'confess';
-const my $EACCESS       => 'confess';
+const my $EMETHOD => 'confess';
+const my $EACCESS => 'confess';
 
 use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
-$VERSION      = '2.008';
+$VERSION      = '2.010';
 $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
