@@ -1,6 +1,5 @@
 package Accessors::Base;
 
-use v5.10;
 use strict;
 use warnings;
 
@@ -91,7 +90,7 @@ sub check_chtype
     # something = undef, OK
     return 1 if ( !defined $self->{$from} || !defined $to );
 
-    my ( $rfrom, $rto ) = ( reftype $self->{$from} || '', reftype $to || '' );
+    my ( $rfrom, $rto ) = ( reftype $self->{$from} || q{}, reftype $to || q{} );
     return 1 if $rfrom eq $rto;
     return _type_error( $self, $from, $rto );
 }
