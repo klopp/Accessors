@@ -86,19 +86,14 @@ sub _type_error
 sub check_chtype
 {
     my ( $self, $from, $to ) = @_;
-    state @CTYPES = ( 'REGEXP', 'HASH', 'ARRAY', 'SCALAR' );
 
     # undef = something, OK
     # something = undef, OK
     return 1 if ( !defined $self->{$from} || !defined $to );
 
     my ( $rfrom, $rto ) = ( reftype $self->{$from} || '', reftype $to || '' );
-    if ( any { $rfrom eq $_ } @CTYPES ) {
-        return 1 if $rfrom eq $rto;
-        _type_error( $self, $from, $rto );
-        return;
-    }
-    1;
+    return 1 if $rfrom eq $rto;
+    return _type_error( $self, $from, $rto );
 }
 
 #------------------------------------------------------------------------------
