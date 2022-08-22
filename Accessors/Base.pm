@@ -20,7 +20,7 @@ const my $EMETHOD => 'confess';
 const my $EACCESS => 'confess';
 
 use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
-$VERSION      = '2.010';
+$VERSION      = '2.020';
 $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
@@ -96,6 +96,7 @@ sub check_chtype
     if ( any { $rfrom eq $_ } @CTYPES ) {
         return 1 if $rfrom eq $rto;
         _type_error( $self, $from, $rto );
+        return;
     }
     1;
 }

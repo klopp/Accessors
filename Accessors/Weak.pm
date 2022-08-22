@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw/$VERSION/;
-$VERSION = '2.010';
+$VERSION = '2.020';
 
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 

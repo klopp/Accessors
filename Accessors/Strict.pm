@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw/$VERSION $CLASS_SUFFIX/;
-$VERSION      = '2.010';
+$VERSION      = '2.020';
 $CLASS_SUFFIX = 'DEADBEEF';
 
 use List::MoreUtils qw/any/;
