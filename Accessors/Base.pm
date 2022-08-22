@@ -11,6 +11,9 @@ use Scalar::Util qw/blessed/;
 const my $ACCESS_DENIED => 'Access denied to field "%s"';
 const my $METHOD_EXISTS => 'Method "%s" already exists';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
+# default error handlers:
+const my $EMETHOD       => 'confess';
+const my $EACCESS       => 'confess';
 
 use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
 $VERSION      = '2.008';
@@ -101,6 +104,8 @@ sub set_internal_data
         if $OPT{exclude};
     @fields = array_minus( @fields, @PKG_METHODS );
     $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
+    $OPT{method} = $EMETHOD unless exists $OPT{method};
+    $OPT{access} = $EACCESS unless exists $OPT{access};
     %{ $self->{$PRIVATE_DATA}->{OPT} } = %OPT;
     return $self;
 }
