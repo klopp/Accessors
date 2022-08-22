@@ -4,13 +4,13 @@ use strict;
 use warnings;
 
 use vars qw/$VERSION/;
-$VERSION = '2.008';
+$VERSION = '2.010';
 
-use List::MoreUtils qw/any/;
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
 use Data::Lock qw/dlock dunlock/;
+use List::MoreUtils qw/any/;
 
 #------------------------------------------------------------------------------
 sub import
@@ -93,7 +93,7 @@ sub create_property
         }
     }
     else {
-        method_error( $self, $property );
+        method_error( $self, "$package\::$property" );
     }
     return $self;
 }
@@ -228,11 +228,13 @@ How to handle an access violation (see the C<include> and C<exclude> lists). Can
 
 =over
 
-=item * None (no handling, default).
-
 =item * C<"carp">, C<"cluck">, C<"croak"> or C<"confess"> (use L<Carp> methods with diagnostics). 
 
 =item * Reference to the handler code, to which two arguments will be passed: a reference to the work object and the field name.
+
+=item * `undef` or any other value - do nothing.
+
+Without `access` `Carp::confess` is called with the appropriate diagnostic.
 
 =back
 
