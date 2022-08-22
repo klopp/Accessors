@@ -1,15 +1,18 @@
 package Accessors::Base;
 
+use v5.10;
 use strict;
 use warnings;
 
 use Array::Utils qw/intersect array_minus/;
 use Carp qw/cluck confess carp croak/;
 use Const::Fast;
-use Scalar::Util qw/blessed/;
+use List::MoreUtils qw/any/;
+use Scalar::Util qw/blessed reftype/;
 
 const my $ACCESS_DENIED => 'Access denied to field "%s"';
 const my $METHOD_EXISTS => 'Method "%s" already exists';
+const my $INVALID_TYPE  => 'Can not change "%s" type ("%s") to "%s"';
 const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
 
 # default error handlers:
@@ -22,7 +25,7 @@ $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
-our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA access_error method_error set_internal_data/;
+our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA check_chtype access_error method_error set_internal_data/;
 
 #------------------------------------------------------------------------------
 sub access_error
@@ -56,6 +59,45 @@ sub method_error
         }
     }
     return;
+}
+
+#------------------------------------------------------------------------------
+sub _type_error
+{
+    my ( $self, $field, $type ) = @_;
+    my $echtype = $self->{$PRIVATE_DATA}->{OPT}->{chtype}->{$field};
+    if ($echtype) {
+        if ( ref $echtype eq 'CODE' ) {
+            $echtype->( $self, $field, $type );
+        }
+        elsif ( Carp->can($echtype) ) {
+            no strict 'refs';
+            $echtype->(
+                sprintf $INVALID_TYPE,
+                ( ( caller(1) )[0] ) . q{::} . $field,
+                ( reftype $self->{$field} ), $type
+            );
+        }
+    }
+    return;
+}
+
+#------------------------------------------------------------------------------
+sub check_chtype
+{
+    my ( $self, $from, $to ) = @_;
+    state @CTYPES = ( 'REGEXP', 'HASH', 'ARRAY', 'SCALAR' );
+
+    # undef = something, OK
+    # something = undef, OK
+    return 1 if ( !defined $self->{$from} || !defined $to );
+
+    my ( $rfrom, $rto ) = ( reftype $self->{$from} || '', reftype $to || '' );
+    if ( any { $rfrom eq $_ } @CTYPES ) {
+        return 1 if $rfrom eq $rto;
+        _type_error( $self, $from, $rto );
+    }
+    1;
 }
 
 #------------------------------------------------------------------------------

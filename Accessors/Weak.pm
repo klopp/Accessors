@@ -46,6 +46,9 @@ sub create_accessors
                 my $self = shift;
                 if (@_) {
                     my $value = shift;
+                    if ( $opt->{chtype}->{$field} ) {
+                        return unless check_chtype( $self, $field, $value );
+                    }
                     if ( $opt->{validate}->{$field} ) {
                         return unless $opt->{validate}->{$field}->($value);
                     }
@@ -78,6 +81,9 @@ sub create_property
             if ( any { $field eq $_ } @{$fields} ) {
                 if (@_) {
                     my $value = shift;
+                    if ( $opt->{chtype}->{$field} ) {
+                        return unless check_chtype( $self, $field, $value );
+                    }
                     if ( $opt->{validate}->{$field} ) {
                         return unless $opt->{validate}->{$field}->($value);
                     }
@@ -120,6 +126,9 @@ sub create_get_set
             no strict 'refs';
             *{"$package\::set_$field"} = sub {
                 my ( $self, $value ) = @_;
+                if ( $opt->{chtype}->{$field} ) {
+                    return unless check_chtype( $self, $field, $value );
+                }
                 if ( $opt->{validate}->{$field} ) {
                     return unless $opt->{validate}->{$field}->($value);
                 }
