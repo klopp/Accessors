@@ -1,10 +1,10 @@
-package Accessors;
+package AccessorsPP;
 
 use strict;
 use warnings;
 
-use autovivification;
 use Array::Utils qw/intersect array_minus/;
+use autovivification;
 use Carp qw/cluck confess carp croak/;
 use Const::Fast;
 use Data::Lock qw/dlock dunlock/;
@@ -291,16 +291,18 @@ __END__
 
 =head1 NAME
 
-Accessors
+AccessorsPP
 
 =head1 SYNOPSIS
 
+Pure Perl accessors implementation.
+
 =over
 
-=item Accessors for whole package
+=item AccessorsPP for whole package
 
     package AClass;
-    use base q/Accessors/;
+    use base q/AccessorsPP/;
     sub new
     {
         my ($class) = @_;
@@ -315,9 +317,9 @@ Accessors
         # return $self->create_get_set;
     }
 
-=item Accessors for single object
+=item AccessorsPP for single object
 
-    use Accessors qw/create_accessors create_property create_get_set/;
+    use AccessorsPP qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
     create_accessors($object);
     # OR
@@ -412,7 +414,7 @@ By default, only those fields for which accessors are created are blocked. Possi
 
 =head2 Setting custom properties on module load.
 
-    use Accessors qw/create_accessors/, { access => croak };
+    use AccessorsPP qw/create_accessors/, { access => croak };
 
 =head2 Setting custom properties on the methods call.
 
@@ -468,6 +470,8 @@ Creates a couple of methods for getting and setting field values:
 =over
 
 =item L<Array::Utils>
+
+=item L<autovivification>
 
 =item L<Carp>
 
