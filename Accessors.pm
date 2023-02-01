@@ -3,6 +3,7 @@ package Accessors;
 use strict;
 use warnings;
 
+use autovivification;
 use Array::Utils qw/intersect array_minus/;
 use Carp qw/cluck confess carp croak/;
 use Const::Fast;
@@ -64,12 +65,15 @@ sub _set_internal_data
 {
     my ( $self, $opt ) = @_;
 
-    my $caller_pkg = ( caller 1 )[0];
+    my $caller_pkg = ( caller 0 )[0];
     confess sprintf( '%s can deal with blessed references only', $caller_pkg )
         unless blessed $self;
-    confess sprintf( "Can not set private data, field '%s' already exists in %s.\n",
-        $PRIVATE_DATA, $caller_pkg, $caller_pkg, $PRIVATE_DATA )
+    no autovivification;
+    confess sprintf( "Accessors already created using %s() method.\n", $self->{$PRIVATE_DATA}->{OPT}->{METHOD} )
+        if exists $self->{$PRIVATE_DATA}->{OPT}->{METHOD};
+    confess sprintf( "Can not set private data, field '%s' already exists in %s.\n", $PRIVATE_DATA, $caller_pkg )
         if exists $self->{$PRIVATE_DATA};
+    use autovivification;
 
     if ($opt) {
         confess sprintf( '%s can receive option as hash reference only', $caller_pkg )
@@ -106,6 +110,8 @@ sub _set_internal_data
     $self->{$PRIVATE_DATA}->{LOCKABLE}
         = [ grep { $_ ne $PRIVATE_DATA } @{ $self->{$PRIVATE_DATA}->{LOCKABLE} } ];
     dlock $self->{$_} for @{ $self->{$PRIVATE_DATA}->{LOCKABLE} };
+
+    $self->{$PRIVATE_DATA}->{OPT}->{METHOD} = ( caller 1 )[3];
 
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
 }
@@ -329,7 +335,7 @@ Create methods to get/set package fields.
 
 All methods take an optional argument: a hash reference with additional parameters. For example:
 
-    create_property($object, { exclude => [ 'index' ], access => 'carp', property => 'prop' } );
+    create_property($object, { exclude => [ 'index' ], eaccess => 'carp', property => 'prop' } );
 
 =over
 
