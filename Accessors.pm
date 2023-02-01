@@ -160,7 +160,7 @@ sub _check_etype
     }
     else {
         no strict 'refs';
-        Carp->$etype->( sprintf $INVALID_TYPE, ( ( caller 1 )[0] ) . q{::} . $from, $rfrom, $rto );
+        $etype->( sprintf $INVALID_TYPE, ( ( caller 1 )[0] ) . q{::} . $from, $rfrom, $rto );
     }
 
     return;
