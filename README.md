@@ -6,7 +6,7 @@
 
 ``` perl
     package MyClass;
-    use base q/Accessors/;
+    use base q/AccessorsPP/;
     sub new
     {
         my ($class) = @_;
@@ -24,7 +24,7 @@
 Теперь все объекты *MyClass* будут содержать аксессоры.
 
 ```perl
-    use Accessors qw/create_accessors create_property create_get_set/;
+    use AccessorsPP qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
     create_accessors( $object );
     # или
@@ -142,7 +142,7 @@
 Все параметры могут указываться глобально, при импорте. Например:
 
 ```perl
-    use Accessors qw/create_accessors/, { access => 'carp', property => 'prop' };
+    use AccessorsPP qw/create_accessors/, { access => 'carp', property => 'prop' };
 ```
 
 # Методы
@@ -153,8 +153,8 @@
 
 ```perl
     package MyBook;
-    use Accessors, { lock => 'all' };
-    use base q/Accessors/;
+    use AccessorsPP, { lock => 'all' };
+    use base q/AccessorsPP/;
     sub new
     {
         my ($class) = @_;
@@ -198,6 +198,8 @@
 # Зависимости
 
 [Array::Utils](https://metacpan.org/pod/Array::Utils)
+
+[autovivification](https://metacpan.org/pod/autovivification)
 
 [Carp](Carp)
 
