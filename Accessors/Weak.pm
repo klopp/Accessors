@@ -9,6 +9,7 @@ $VERSION = '2.020';
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 use Accessors::Base;
+use Array::Utils qw/intersect/;
 use Data::Lock qw/dlock dunlock/;
 use List::MoreUtils qw/any/;
 
@@ -27,7 +28,15 @@ sub _set_internal_data
 
     my $lock = $self->{$PRIVATE_DATA}->{OPT}->{lock};
     if ($lock) {
-        dlock $self->{$_} for $lock eq 'all' ? keys %{$self} : @{ $self->{$PRIVATE_DATA}->{FIELDS} };
+        my $lockable = @{ $self->{$PRIVATE_DATA}->{FIELDS} };
+        my @all      = keys %{$self};
+        if ( $lock eq 'all' ) {
+            $lockable = \@all;
+        }
+        elsif ( ref $lock eq 'ARRAY' ) {
+            $lockable = [ intersect( @{$lock}, @all ) ];
+        }
+        dlock $self->{$_} for @{$lockable};
     }
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
 }

@@ -71,11 +71,8 @@ sub _type_error
         }
         elsif ( Carp->can($etype) ) {
             no strict 'refs';
-            $etype->(
-                sprintf $INVALID_TYPE,
-                ( ( caller(1) )[0] ) . q{::} . $field,
-                ( reftype $self->{$field} ), $type
-            );
+            $etype->( sprintf $INVALID_TYPE, ( ( caller(1) )[0] ) . q{::} . $field,
+                ( reftype $self->{$field} ), $type );
         }
     }
     return;
