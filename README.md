@@ -39,7 +39,7 @@
 Все методы принимают необязательный аргумент: ссылку на хэш с дополнительными параметрами. Например:
 
 ```perl
-    create_property( $object, { exclude => [ 'index' ], access => 'carp', property => 'prop' } );
+    create_property( $object, { exclude => [ 'index' ], eaccess => 'carp', property => 'prop' } );
 ```
 
 ## include => [ name1, name2, ... ]
@@ -107,7 +107,7 @@
 
 ```perl
     $books->create_accessors( {
-        chtype => {
+        etype => {
             author => sub {
                 my ( $self, $field, $type ) = @_;
                 confess sprintf(
@@ -142,9 +142,7 @@
 Все параметры могут указываться глобально, при импорте. Например:
 
 ```perl
-    use Accessors::Weak { access => 'carp', property => 'prop' };
-    # [...]
-    use Accessors::Strict qw/create_accessors/, { access => 'carp', property => 'prop' };
+    use Accessors qw/create_accessors/, { access => 'carp', property => 'prop' };
 ```
 
 # Методы
