@@ -329,7 +329,7 @@ Create methods to get/set package fields.
 
 All methods take an optional argument: a hash reference with additional parameters. For example:
 
-    create_property($object, { exclude => [ 'index' ], access => 'carp', property => 'prop' } );
+    create_property($object, { exclude => [ 'index' ], eaccess => 'carp', property => 'prop' } );
 
 =over
 
