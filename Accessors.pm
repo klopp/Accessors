@@ -1,6 +1,5 @@
 package Accessors;
 
-#------------------------------------------------------------------------------
 use strict;
 use warnings;
 
@@ -12,22 +11,19 @@ use List::MoreUtils qw/any/;
 use Scalar::Util qw/blessed reftype/;
 
 const my $ACCESS_DENIED => 'Access denied to field "%s"';
-const my $METHOD_EXISTS => 'Method "%s" already exists';
+const my $EACCESS       => 'confess';
+const my $EMETHOD       => 'confess';
 const my $INVALID_TYPE  => 'Can not change "%s" type ("%s") to "%s"';
-const my @PKG_METHODS   => qw/can isa new VERSION DESTROY AUTOLOAD CHECK BEGIN END/;
+const my $METHOD_EXISTS => 'Method "%s" already exists';
+const my $PROP_METHOD   => 'property';
 
-# default error handlers:
-const my $EMETHOD => 'confess';
-const my $EACCESS => 'confess';
-
-use vars qw/$VERSION $PROP_METHOD $PRIVATE_DATA %OPT/;
-$VERSION      = '3.00';
-$PROP_METHOD  = 'property';
+use vars qw/$VERSION $PRIVATE_DATA %OPT/;
+$VERSION = '3.00';
 our @EXPORT_OK = qw/create_accessors create_property create_get_set/;
 
 #------------------------------------------------------------------------------
 BEGIN {
-    $PRIVATE_DATA = __PACKAGE__ . '::Data::' . int( rand time );
+    $PRIVATE_DATA = __PACKAGE__ . '::Data::' . int rand time;
     dlock $PRIVATE_DATA;
 }
 
@@ -36,16 +32,16 @@ sub import
 {
     my $self = shift;
 
-    # temporary storage:
-    %OPT = ();
-
-    my (@exports);
+    my @exports;
     for (@_) {
         if ( ref $_ eq 'HASH' ) {
             %OPT = ( %OPT, %{$_} );
         }
-        else {
+        elsif ( !ref $_ ) {
             push @exports, $_;
+        }
+        else {
+            confess sprintf "Constructor only accepts a scalar and a hash reference.\n";
         }
     }
 
@@ -54,15 +50,24 @@ sub import
 }
 
 #------------------------------------------------------------------------------
+sub _check_ehandler
+{
+    my ($ehandler) = @_;
+
+    return 1 if ref $OPT{$ehandler} eq 'CODE';
+    return 1 if !ref $OPT{$ehandler} && Carp->can( $OPT{$ehandler} );
+    return confess sprintf "Invalid '%s' parameter value.\n", $ehandler;
+}
+
+#------------------------------------------------------------------------------
 sub _set_internal_data
 {
     my ( $self, $opt ) = @_;
 
-    my $caller_pkg = ( caller(1) )[0];
+    my $caller_pkg = ( caller 1 )[0];
     confess sprintf( '%s can deal with blessed references only', $caller_pkg )
         unless blessed $self;
-    confess
-        sprintf( "Can not set private data, field '%s' already exists in %s.\nUse \$%s::%s = 'unique name' before\n",
+    confess sprintf( "Can not set private data, field '%s' already exists in %s.\n",
         $PRIVATE_DATA, $caller_pkg, $caller_pkg, $PRIVATE_DATA )
         if exists $self->{$PRIVATE_DATA};
 
@@ -75,26 +80,33 @@ sub _set_internal_data
     my @fields = keys %{$self};
     @fields = intersect( @fields, @{ $OPT{include} } ) if $OPT{include};
     @fields = array_minus( @fields, @{ $OPT{exclude} } )
-        if $OPT{exclude};
-    @fields = array_minus( @fields, @PKG_METHODS );
-    $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
-    $OPT{emethod} = $EMETHOD unless exists $OPT{emethod};
-    $OPT{eaccess} = $EACCESS unless exists $OPT{eaccess};
-    %{ $self->{$PRIVATE_DATA}->{OPT} } = %OPT;
+        if $opt->{exclude};
 
-    $self->{$PRIVATE_DATA}->{OPT}->{lock} ||= 1;
+    $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
+    $OPT{lock}    //= 1;
+    $OPT{emethod} //= $EMETHOD;
+    $OPT{eaccess} //= $EACCESS;
+    _check_ehandler('emethod');
+    _check_ehandler('eaccess');
+    _check_ehandler('etype') if $OPT{etype};
+
+    %{ $self->{$PRIVATE_DATA}->{OPT} } = ( %OPT, %{$opt} );
+
     $self->{$PRIVATE_DATA}->{LOCKABLE} = $self->{$PRIVATE_DATA}->{FIELDS};
+
     my @all = keys %{$self};
     if ( ref $self->{$PRIVATE_DATA}->{OPT}->{lock} eq 'ARRAY' ) {
-        $self->{$PRIVATE_DATA}->{LOCKABLE} = [ intersect( @{ $self->{$PRIVATE_DATA}->{FIELDS} }, @all ) ];
+        $self->{$PRIVATE_DATA}->{LOCKABLE}
+            = [ intersect( @{ $self->{$PRIVATE_DATA}->{OPT}->{lock} }, @all ) ];
     }
     elsif ( $self->{$PRIVATE_DATA}->{OPT}->{lock} eq 'all' ) {
         $self->{$PRIVATE_DATA}->{LOCKABLE} = \@all;
     }
 
-    $self->{$PRIVATE_DATA}->{LOCKABLE} = [ grep { $_ ne $PRIVATE_DATA } @{ $self->{$PRIVATE_DATA}->{LOCKABLE} } ];
-
+    $self->{$PRIVATE_DATA}->{LOCKABLE}
+        = [ grep { $_ ne $PRIVATE_DATA } @{ $self->{$PRIVATE_DATA}->{LOCKABLE} } ];
     dlock $self->{$_} for @{ $self->{$PRIVATE_DATA}->{LOCKABLE} };
+
     return ( \%{ $self->{$PRIVATE_DATA}->{OPT} }, \@{ $self->{$PRIVATE_DATA}->{FIELDS} } );
 }
 
@@ -103,14 +115,12 @@ sub _access_error
 {
     my ( $self, $field ) = @_;
     my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{eaccess};
-    if ($eaccess) {
-        if ( ref $eaccess eq 'CODE' ) {
-            $eaccess->( $self, $field );
-        }
-        elsif ( Carp->can($eaccess) ) {
-            no strict 'refs';
-            $eaccess->( sprintf $ACCESS_DENIED, $field );
-        }
+    if ( ref $eaccess eq 'CODE' ) {
+        $eaccess->( $self, $field );
+    }
+    else {
+        no strict 'refs';
+        $eaccess->( sprintf $ACCESS_DENIED, $field );
     }
     return;
 }
@@ -120,36 +130,14 @@ sub _method_error
 {
     my ( $self, $method ) = @_;
     my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{emethod};
-    if ($emethod) {
-        if ( ref $emethod eq 'CODE' ) {
-            $emethod->( $self, $method );
-        }
-        elsif ( Carp->can($emethod) ) {
-            no strict 'refs';
-            $emethod->( sprintf $METHOD_EXISTS, $method );
-        }
+    if ( ref $emethod eq 'CODE' ) {
+        $emethod->( $self, $method );
+    }
+    else {
+        no strict 'refs';
+        $emethod->( sprintf $METHOD_EXISTS, $method );
     }
     return;
-}
-
-#------------------------------------------------------------------------------
-sub _type_error
-{
-    my ( $self, $field, $type ) = @_;
-    my $etype = $self->{$PRIVATE_DATA}->{OPT}->{etype};
-    if ($etype) {
-        if ( ref $etype eq 'CODE' ) {
-            $etype->( $self, $field, $type );
-            return;
-        }
-        elsif ( Carp->can($etype) ) {
-            no strict 'refs';
-            $etype->( sprintf $INVALID_TYPE, ( ( caller(1) )[0] ) . q{::} . $field,
-                ( reftype $self->{$field} ), $type );
-            return;
-        }
-    }
-    return 1;
 }
 
 #------------------------------------------------------------------------------
@@ -157,13 +145,25 @@ sub _check_etype
 {
     my ( $self, $from, $to ) = @_;
 
+    my $etype = $self->{$PRIVATE_DATA}->{OPT}->{etype};
+    return 1 unless $etype;
+
     # undef = something, OK
     # something = undef, OK
     return 1 if ( !defined $self->{$from} || !defined $to );
 
     my ( $rfrom, $rto ) = ( reftype $self->{$from} || q{}, reftype $to || q{} );
     return 1 if $rfrom eq $rto;
-    return _type_error( $self, $from, $rto );
+
+    if ( ref $etype eq 'CODE' ) {
+        $etype->( $self, $from, $rto );
+    }
+    else {
+        no strict 'refs';
+        Carp->$etype->( sprintf $INVALID_TYPE, ( ( caller 1 )[0] ) . q{::} . $from, $rfrom, $rto );
+    }
+
+    return;
 }
 
 #------------------------------------------------------------------------------
@@ -465,9 +465,9 @@ Creates a couple of methods for getting and setting field values:
 
 =item L<Carp>
 
-=item L<Data::Lock>
-
 =item L<Const::Fast>
+
+=item L<Data::Lock>
  
 =item L<List::MoreUtils>
 
