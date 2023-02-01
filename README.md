@@ -6,7 +6,7 @@
 
 ``` perl
     package MyClass;
-    use base q/Accessors::Weak/;
+    use base q/Accessors/;
     sub new
     {
         my ($class) = @_;
@@ -24,7 +24,7 @@
 Теперь все объекты *MyClass* будут содержать аксессоры.
 
 ```perl
-    use Accessors::Strict qw/create_accessors create_property create_get_set/;
+    use Accessors qw/create_accessors create_property create_get_set/;
     my $object = MyClass->new;
     create_accessors( $object );
     # или
@@ -33,41 +33,6 @@
     # create_get_set( $object );
 ```
 Теперь *$object* будет содержать аксессоры.
-
-## Неочевидное
-
-```perl
-    # Можно так:
-    my %h = ( 1 => 2, 3 => 4 );
-    # А можно и так:
-    my $h = bless { 1 => 2, 3 => 4 }, 'StrongHash';
-    create_accessors($h);
-```
-
-## Accessors::Weak
-
-Созданные аксессоры не исключают прямого доступа к полям объекта (но: см. параметр `lock`).
-
-## Accessors::Strict
-
-Созданные аксессоры запрещают прямой доступ к полям объекта. При этом сам объект меняет `@ISA`:
-
-```perl
-    my $o1 = MyClass->new;
-    say ref $o1;     # => "MyClass"
-    create_accessors($o1);
-    say ref $o1;     # => "MyClass::DEAFBEEF"
-    say $o1->data;   # => OK, выведет значение $o1->{data}
-    say $o1->{data}; # => ОШИБКА, "Not a HASH reference at ..."
-    my $o2 = MyClass->new;
-    say ref $o2;     # => "MyClass"
-    create_accessors($o2);
-    say ref $o2;     # => "MyClass::DEAFBEEG"
-    my $o3 = MyClass->new;
-    say ref $o3;     # => "MyClass"
-    create_accessors($o3);
-    say ref $o3;     # => "MyClass::DEAFBEEH"
-```
 
 # Параметры
 
@@ -83,7 +48,7 @@
     
 ## exclude => [ name1, name2, ... ]
 
-Список имён полей для которых не нужно создавать аксессоры. Этот параметр обрабатывается после `include`.
+Список имён полей для которых не нужно создавать аксессоры. Если приутствует `include`, то `exclude` обрабатывается после него.
 
 ## property => name
 
@@ -111,7 +76,8 @@
 
 ## eaccess => VALUE
 
-Способ обработки нарушения доступа (см. списки `include` и `exclude`). Может принимать значения:
+Обработка случаев обращения через метод `property()` к полям, для которых этот аксессор не создан.
+Может принимать значения:
 * `"carp"`, `"cluck"`, `"croak"` или `"confess"`. В этом случае будут вызываться соответствующие методы модуля [Carp](https://metacpan.org/pod/Carp) с диагностикой. 
 * Ссылка на код обработчика, которому будут переданы два аргумента: ссылка на рабочий объект и имя поля:
 
@@ -157,7 +123,7 @@
 
 ## lock => VALUE
 
-Только для `Accessors::Weak`. Защищает поля от прямой модификации.
+Управляет защитой полей от прямой модификации.
 
 ```perl
     $object->set_foo('bar'); # OK
@@ -166,11 +132,10 @@
     $object->{foo} = 'bar' ; # ОШИБКА, "Modification of a read-only value attempted at..."
 ```
 
-По умолчанию поля не блокируются. Возможные значения:
+По умолчанию блокируются только те поля, для которых созданы аксессоры. Возможные значения:
 
 * `"all"` блокировка всех полей, включая поля без аксессров.
-* `SCALAR` (не `false`/`0`/`undef`) блокировка полей, для которых созданы аксессоры.
-* `ARRAY` блокировка полей из массива.
+* `ARRAY` блокировка только полей из массива, включая поля без аксессоров.
 
 ### Импорт
 
@@ -190,8 +155,8 @@
 
 ```perl
     package MyBook;
-    use Accessors::Weak, { lock => 'all' };
-    use base q/Accessors::Weak/;
+    use Accessors, { lock => 'all' };
+    use base q/Accessors/;
     sub new
     {
         my ($class) = @_;
@@ -216,7 +181,6 @@
     say $object->property('scavar_value');
     say $object->property( 'scavar_value', 'new_value' ));
 ```
-При нарушении доступа (см. параметры `include` и `exclude`) обрабатывается параметр `access`.
 
 ## create_get_set( [$object,] \[$options] )
 
