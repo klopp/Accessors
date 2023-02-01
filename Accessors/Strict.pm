@@ -46,8 +46,8 @@ sub _create_access
         if ( any { $field eq $_ } @{ $self->{$PRIVATE_DATA}->{FIELDS} } ) {
             if (@_) {
                 my $value = shift;
-                if ( $self->{$PRIVATE_DATA}->{OPT}->{chtype}->{$field} ) {
-                    return unless check_chtype( $self, $field, $value );
+                if ( $self->{$PRIVATE_DATA}->{OPT}->{etype}->{$field} ) {
+                    return unless check_etype( $self, $field, $value );
                 }
                 if ( $self->{$PRIVATE_DATA}->{OPT}->{validate}->{$field} ) {
                     return unless $self->{$PRIVATE_DATA}->{OPT}->{validate}->{$field}->($value);

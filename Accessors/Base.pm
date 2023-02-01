@@ -24,13 +24,13 @@ $PROP_METHOD  = 'property';
 $PRIVATE_DATA = __PACKAGE__ . '::Data';
 
 use base qw/Exporter/;
-our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA check_chtype access_error method_error set_internal_data/;
+our @EXPORT = qw/$PROP_METHOD $PRIVATE_DATA check_etype access_error method_error set_internal_data/;
 
 #------------------------------------------------------------------------------
 sub access_error
 {
     my ( $self, $field ) = @_;
-    my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{access};
+    my $eaccess = $self->{$PRIVATE_DATA}->{OPT}->{eaccess};
     if ($eaccess) {
         if ( ref $eaccess eq 'CODE' ) {
             $eaccess->( $self, $field );
@@ -47,7 +47,7 @@ sub access_error
 sub method_error
 {
     my ( $self, $method ) = @_;
-    my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{method};
+    my $emethod = $self->{$PRIVATE_DATA}->{OPT}->{emethod};
     if ($emethod) {
         if ( ref $emethod eq 'CODE' ) {
             $emethod->( $self, $method );
@@ -64,14 +64,14 @@ sub method_error
 sub _type_error
 {
     my ( $self, $field, $type ) = @_;
-    my $echtype = $self->{$PRIVATE_DATA}->{OPT}->{chtype}->{$field};
-    if ($echtype) {
-        if ( ref $echtype eq 'CODE' ) {
-            $echtype->( $self, $field, $type );
+    my $etype = $self->{$PRIVATE_DATA}->{OPT}->{etype}->{$field};
+    if ($etype) {
+        if ( ref $etype eq 'CODE' ) {
+            $etype->( $self, $field, $type );
         }
-        elsif ( Carp->can($echtype) ) {
+        elsif ( Carp->can($etype) ) {
             no strict 'refs';
-            $echtype->(
+            $etype->(
                 sprintf $INVALID_TYPE,
                 ( ( caller(1) )[0] ) . q{::} . $field,
                 ( reftype $self->{$field} ), $type
@@ -82,7 +82,7 @@ sub _type_error
 }
 
 #------------------------------------------------------------------------------
-sub check_chtype
+sub check_etype
 {
     my ( $self, $from, $to ) = @_;
 
@@ -142,8 +142,8 @@ sub set_internal_data
         if $OPT{exclude};
     @fields = array_minus( @fields, @PKG_METHODS );
     $self->{$PRIVATE_DATA}->{FIELDS} = [@fields];
-    $OPT{method} = $EMETHOD unless exists $OPT{method};
-    $OPT{access} = $EACCESS unless exists $OPT{access};
+    $OPT{emethod} = $EMETHOD unless exists $OPT{emethod};
+    $OPT{eaccess} = $EACCESS unless exists $OPT{eaccess};
     %{ $self->{$PRIVATE_DATA}->{OPT} } = %OPT;
     return $self;
 }

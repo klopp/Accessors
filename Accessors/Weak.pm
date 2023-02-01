@@ -46,8 +46,8 @@ sub create_accessors
                 my $self = shift;
                 if (@_) {
                     my $value = shift;
-                    if ( $opt->{chtype}->{$field} ) {
-                        return unless check_chtype( $self, $field, $value );
+                    if ( $opt->{etype}->{$field} ) {
+                        return unless check_etype( $self, $field, $value );
                     }
                     if ( $opt->{validate}->{$field} ) {
                         return unless $opt->{validate}->{$field}->($value);
@@ -81,8 +81,8 @@ sub create_property
             if ( any { $field eq $_ } @{$fields} ) {
                 if (@_) {
                     my $value = shift;
-                    if ( $opt->{chtype}->{$field} ) {
-                        return unless check_chtype( $self, $field, $value );
+                    if ( $opt->{etype}->{$field} ) {
+                        return unless check_etype( $self, $field, $value );
                     }
                     if ( $opt->{validate}->{$field} ) {
                         return unless $opt->{validate}->{$field}->($value);
@@ -126,8 +126,8 @@ sub create_get_set
             no strict 'refs';
             *{"$package\::set_$field"} = sub {
                 my ( $self, $value ) = @_;
-                if ( $opt->{chtype}->{$field} ) {
-                    return unless check_chtype( $self, $field, $value );
+                if ( $opt->{etype}->{$field} ) {
+                    return unless check_etype( $self, $field, $value );
                 }
                 if ( $opt->{validate}->{$field} ) {
                     return unless $opt->{validate}->{$field}->($value);
@@ -231,7 +231,7 @@ List of validators for set values. Functions must return undef if validation fai
     });
 
 
-=item access => VALUE
+=item eaccess => VALUE
 
 How to handle an access violation (see the C<include> and C<exclude> lists). Can be:
 
@@ -243,11 +243,11 @@ How to handle an access violation (see the C<include> and C<exclude> lists). Can
 
 =item * `undef` or any other value - do nothing.
 
-Without `access` `Carp::confess` is called with the appropriate diagnostic.
+Without `eaccess` `Carp::confess` is called with the appropriate diagnostic.
 
 =back
 
-=item method => VALUE
+=item emethod => VALUE
 
 When an accessor is created, if a method with the same name is found in a package or object, this handler will be called. Values are similar to the C<access> parameter.
 
